@@ -158,7 +158,7 @@ namespace Mediapipe.Unity.Sample.HandLandmarkDetection
 
     private void OnHandLandmarkDetectionOutput(HandLandmarkerResult result, Image image, long timestamp)
     {
-      Debug.Log(result);
+      // Debug.Log(result);
       _handLandmarkerResultAnnotationController.DrawLater(result);
       _handsManager.UpdateHands(result);
     }

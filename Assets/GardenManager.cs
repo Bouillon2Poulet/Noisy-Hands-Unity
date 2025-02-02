@@ -6,7 +6,7 @@ public class GardenManager : MonoBehaviour
     float _flowerBaseScale = 200;
     float _flowerDetectionRadius = 200;
 
-    [SerializeField] private HandsManager _handsManager;
+    [SerializeField] private SunBehavior _sun;
     [SerializeField] private GameObject _flowerPrefab;
 
 
@@ -59,14 +59,38 @@ public class GardenManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Vector3 rightHandPosition = _handsManager._rightHand.position;
-        foreach (Flower flower in Flowers)
+        Vector3 sunPosition = _sun._sunPosition;
+        Vector3 localSunDirection = new Vector3(0, -1, -1).normalized;
+        Vector3 sunDirection = _sun.transform.TransformDirection(localSunDirection);
+        Vector3 gardenNormal = new Vector3(0, 1, 0);
+        Debug.Log($"sunDirection: {sunDirection}");
+        Vector3 intersectionPosition = new Vector3();
+
+        _flowerDetectionRadius = _sun._sunRadius * 1.5f;
+        if (CalculateIntersection(new Vector3(0, 0, 0), gardenNormal, sunPosition, sunDirection, ref intersectionPosition))
         {
-            Vector3 delta = flower.position - rightHandPosition;
-            delta.y = 0;
-            float distance = delta.magnitude;
-            float scale = distance > _flowerDetectionRadius ? 0 : 1 - distance / _flowerDetectionRadius;
-            flower.setScale(scale * _flowerBaseScale);
+            foreach (Flower flower in Flowers)
+            {
+                Vector3 delta = flower.position - intersectionPosition;
+                delta.y = 0;
+                float distance = delta.magnitude;
+                float scale = distance > _flowerDetectionRadius ? 0 : 1 - distance / _flowerDetectionRadius;
+                flower.setScale(scale * _flowerBaseScale);
+            }
         }
+    }
+
+    public static bool CalculateIntersection(Vector3 planePoint, Vector3 planeNormal, Vector3 lineOrigin, Vector3 lineDirection, ref Vector3 intersectionPosition)
+    {
+        float denom = Vector3.Dot(planeNormal, lineDirection);
+
+        if (Mathf.Abs(denom) < Mathf.Epsilon)
+        {
+            return false; // Pas d'intersection ou droite dans le plan
+        }
+
+        float t = Vector3.Dot(planeNormal, planePoint - lineOrigin) / denom;
+        intersectionPosition = lineOrigin + t * lineDirection;
+        return true;
     }
 }
